@@ -17,13 +17,14 @@
  */
 package com.shapira.examples.producer.simplecounter;
 
+import java.util.Properties;
+
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
 
-import java.util.Properties;
-
 // Simple wrapper to the old scala producer, to make the counting code cleaner
+@Deprecated
 public class DemoProducerOld implements DemoProducer{
     private Properties kafkaProps = new Properties();
     private Producer<String, String> producer;
@@ -36,14 +37,13 @@ public class DemoProducerOld implements DemoProducer{
     }
 
     @Override
-    public void configure(String brokerList, String sync) {
+    public void configure(String brokerList, Mode mode) {
         kafkaProps.put("metadata.broker.list", brokerList);
         kafkaProps.put("serializer.class", "kafka.serializer.StringEncoder");
         kafkaProps.put("request.required.acks", "1");
-        kafkaProps.put("producer.type", sync);
+        kafkaProps.put("producer.type", mode.name().toLowerCase());
         kafkaProps.put("send.buffer.bytes","550000");
         kafkaProps.put("receive.buffer.bytes","550000");
-
         config = new ProducerConfig(kafkaProps);
     }
 

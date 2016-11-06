@@ -20,6 +20,8 @@ package com.shapira.examples.producer.simplecounter;
 
 import java.util.concurrent.ExecutionException;
 
+import com.shapira.examples.producer.simplecounter.DemoProducer.Mode;
+
 public class SimpleCounter {
 
     private static DemoProducer producer;
@@ -28,7 +30,7 @@ public class SimpleCounter {
     public static void main(String[] args) throws InterruptedException, ExecutionException {
 
         if (args.length == 0) {
-            System.out.println("SimpleCounter {broker-list} {topic} {type old/new} {type sync/async} {delay (ms)} {count}");
+            System.out.println("SimpleCounter {broker-list} {topic} {type old/new} {type SYNC/ASYNC} {delay (ms)} {count}");
             return;
         }
 
@@ -36,7 +38,14 @@ public class SimpleCounter {
         String brokerList = args[0];
         String topic = args[1];
         String age = args[2];
-        String sync = args[3];
+        Mode mode;
+        try {
+        	mode = Mode.valueOf(args[3].toUpperCase());
+        }
+        catch (Exception e) {
+        	mode = Mode.SYNC;
+        }
+        
         int delay = Integer.parseInt(args[4]);
         int count = Integer.parseInt(args[5]);
 
@@ -50,7 +59,7 @@ public class SimpleCounter {
         }
 
         /* start a producer */
-        producer.configure(brokerList, sync);
+        producer.configure(brokerList, mode);
         producer.start();
 
         long startTime = System.currentTimeMillis();

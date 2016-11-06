@@ -20,12 +20,15 @@ package com.shapira.examples.producer.simplecounter;
 import java.util.concurrent.ExecutionException;
 
 public interface DemoProducer {
-
+	public static enum Mode {
+		SYNC, ASYNC;
+	}
+	
     /**
      * create configuration for the producer
      * consult Kafka documentation for exact meaning of each configuration parameter
      */
-    void configure(String brokerList, String sync);
+    void configure(String brokerList, Mode mode);
 
     /* start the producer */
     void start();

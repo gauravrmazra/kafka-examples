@@ -17,15 +17,19 @@
  */
 package com.shapira.examples.producer.simplecounter;
 
-import org.apache.kafka.clients.producer.*;
-
+import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
+
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 
 public class DemoProducerNewJava implements DemoProducer {
 
     String topic;
-    String sync;
+    Mode mode;
     private Properties kafkaProps = new Properties();
     private Producer<String, String> producer;
 
@@ -34,8 +38,8 @@ public class DemoProducerNewJava implements DemoProducer {
     }
 
     @Override
-    public void configure(String brokerList, String sync) {
-        this.sync = sync;
+    public void configure(String brokerList, Mode mode) {
+        this.mode = mode;
         kafkaProps.put("bootstrap.servers", brokerList);
 
         // This is mandatory, even though we don't send keys
@@ -55,12 +59,16 @@ public class DemoProducerNewJava implements DemoProducer {
 
     @Override
     public void produce(String value) throws ExecutionException, InterruptedException {
-        if (sync.equals("sync"))
-            produceSync(value);
-        else if (sync.equals("async"))
-            produceAsync(value);
-        else throw new IllegalArgumentException("Expected sync or async, got " + sync);
-
+        switch (mode) {
+		case SYNC:
+			produceSync(value);
+			break;
+		case ASYNC:
+			produceAsync(value);
+			break;
+		default:
+			throw new IllegalArgumentException("Expected sync or async, got " + mode);
+		}
     }
 
     @Override
@@ -78,17 +86,11 @@ public class DemoProducerNewJava implements DemoProducer {
     /* Produce a record without waiting for server. This includes a callback that will print an error if something goes wrong */
     private void produceAsync(String value) {
         ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, value);
-        producer.send(record, new DemoProducerCallback());
-    }
-
-    private class DemoProducerCallback implements Callback {
-
-        @Override
-        public void onCompletion(RecordMetadata recordMetadata, Exception e) {
-            if (e != null) {
+        producer.send(record, (RecordMetadata recordMetadata, Exception e) -> {
+        	if (Objects.nonNull(e)) {
                 System.out.println("Error producing to topic " + recordMetadata.topic());
                 e.printStackTrace();
             }
-        }
+        });
     }
 }
